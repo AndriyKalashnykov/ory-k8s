@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kratos-migration
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 150
+  parallelism: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: kratos-migration
+        image: oryd/kratos:v0.10.1
+        command: ["kratos", "-c", "/etc/config/kratos/kratos.yml", "migrate", "sql", "-e", "--yes"]
+        imagePullPolicy: IfNotPresent
+        envFrom: 
+          - secretRef:
+              name: kratos-env
+        volumeMounts:
+          - name: kratos-identity-schema
+            mountPath: /etc/config/kratos/identity.schema.json
+            subPath: identity.schema.json
+          - name: kratos-config
+            mountPath: /etc/config/kratos/kratos.yml
+            subPath: kratos.yml
+      volumes:
+        - name: kratos-identity-schema
+          configMap:
+            name: identity-schema-config
+            defaultMode: 420
+        - name: kratos-config
+          configMap:
+            name: kratos-config
+            defaultMode: 420
+      terminationGracePeriodSeconds: 10
