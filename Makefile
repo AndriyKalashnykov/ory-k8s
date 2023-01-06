@@ -29,6 +29,10 @@ version:
 #y-deploy: @ Deploy Yugabyte
 y-deploy:
 	kubectl apply -f ./yugabytedb
+	kubectl wait pods -n ory-poc -l app=yugabytedb --for condition=Ready --timeout=180s
+	echo "waiting for yugabytedb service to get External-IP"
+	@until kubectl get service/yugabytedb -n ory-poc --output=jsonpath='{.status.loadBalancer}' | grep "ingress"; do : ; done
+	@echo xdg-open http://$(shell kubectl get svc/yugabytedb -n ory-poc -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'):7000
 
 #y-undeploy: @ UnDeploy Yugabyte
 y-uneploy:
