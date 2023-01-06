@@ -5,7 +5,7 @@ metadata:
 data:
   kratos.yml: |
     version: v0.10.1
-    dsn: memory
+    dsn: yugabytedb://yugabyte:yugabyte@psql:5433/ory?sslmode=disable&max_conns=20&max_idle_conns=4
     dev: false
     serve:
       public:
