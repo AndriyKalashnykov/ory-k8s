@@ -1,0 +1,98 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ory-poc
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: yugabytedb-config
+  namespace: ory-poc
+  labels:
+    app: yugabytedb
+data:
+  POSTGRES_DB: threeport_api
+  POSTGRES_USER: tp_rest_api
+  POSTGRES_PASSWORD: tp-rest-api-pwd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yugabytedb
+  namespace: ory-poc
+  labels:
+    app: yugabytedb
+spec:
+  type: LoadBalancer
+  ports:
+    - name: "tcp-ysql-port"
+      port: 5433
+    - name: "tcp-yedis-port"
+      port: 6379
+    - name: "http-ui1"
+      port: 7000
+    - name: "tcp-rpc-port1"
+      port: 7100  
+    - name: "http-ui2"
+      port: 9000
+    - name: "tcp-yql-port"
+      port: 9042
+    - name: "tcp-rpc-port2"
+      port: 9100
+    - name: "http-yedis-met"
+      port: 11000
+    - name: "http-ycql-met"
+      port: 12000
+    - name: "http-ysql-met"
+      port: 13000
+
+  selector:
+   app: yugabytedb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yugabytedb
+  namespace: ory-poc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yugabytedb
+  template:
+    metadata:
+      labels:
+        app: yugabytedb
+    spec:
+      containers:
+        - name: yugabytedb
+          image: yugabytedb/yugabyte:2.17.0.0-b24
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5433
+            - containerPort: 6379
+            - containerPort: 7000
+            - containerPort: 7100
+            - containerPort: 9000
+            - containerPort: 9100
+            - containerPort: 9042
+            - containerPort: 11000
+            - containerPort: 12000
+            - containerPort: 13000
+          envFrom:
+            - configMapRef:
+                name: yugabytedb-config
+          volumeMounts:
+            - mountPath: /mnt/master
+              name: yugabytedb
+          command:
+            - "/sbin/tini"
+            - "--"
+          args:
+            - "/bin/bash"
+            - "-c"
+            - "/home/yugabyte/bin/yugabyted start --daemon=false --ui=true"
+      volumes:
+        - name: yugabytedb
+          emptyDir: {}
