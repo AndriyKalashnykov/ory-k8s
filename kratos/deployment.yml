@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: kratos
-        image: oryd/kratos:v0.10.1
+        image: oryd/kratos:v0.11.0
         command: ["kratos", "-c", "/etc/config/kratos/kratos.yml", "serve"]
         imagePullPolicy: IfNotPresent
         envFrom: 

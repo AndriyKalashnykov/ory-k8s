@@ -37,3 +37,30 @@ y-deploy:
 #y-undeploy: @ UnDeploy Yugabyte
 y-uneploy:
 	kubectl delete -f ./yugabytedb
+
+
+#k-deploy: @ Deploy Kratos
+k-deploy:
+	kubectl apply -f ./kratos/identity-schema.yml -n ory-poc
+	kubectl apply -f ./kratos/config.yml -n ory-poc
+	kubectl apply -f ./kratos/env.yml -n ory-poc
+	kubectl apply -f ./kratos/migration-job.yml -n ory-poc
+	kubectl apply -f ./kratos/service.yml -n ory-poc
+	kubectl create ingress ory-kratos --class=nginx --rule="*.example.com/*=kratos-service:80"
+	kubectl apply -f ./kratos/deployment.yml -n ory-poc
+
+#k-undeploy: @ UnDeploy Kratos
+k-undeploy:
+	kubectl delete -f ./kratos/deployment.yml -n ory-poc
+	kubectl delete ingress ory-kratos
+	kubectl delete -f ./kratos/service.yml -n ory-poc
+	kubectl delete -f ./kratos/migration-job.yml -n ory-poc
+	kubectl delete -f ./kratos/env.yml -n ory-poc
+	kubectl delete -f ./kratos/config.yml -n ory-poc
+	kubectl delete -f ./kratos/identity-schema.yml -n ory-poc
+	
+	
+	
+	
+
+	

@@ -10,19 +10,28 @@
 ```bash
 make y-deploy
 
-xdg-open 
-
-kubectl delete -f ./yugabytedb
-
 ```
 
 ### UnDeploy 
 
 ```bash
 make udeploy
+```
 
-xdg-open 
+## Kratos
 
-kubectl delete -f ./yugabytedb
+[tags](https://hub.docker.com/r/oryd/kratos/tags)
 
+### Deploy 
+
+```bash
+make k-deploy
+curl -v -s -k -X GET -H "Accept: application/json" https://api.example.com/kratos/self-service/registration/browser
+
+```
+
+### UnDeploy 
+
+```bash
+make k-udeploy
 ```
