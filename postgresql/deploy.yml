@@ -20,11 +20,13 @@ kind: ConfigMap
 metadata:
   creationTimestamp: null
   name: postgres-config-data
-  namespace: threeport-api
+  labels:
+    app: postgres
 data:
   create_tables.sql: |+
     CREATE DATABASE ory;
-    CREATE USER oryadmin PASSWORD 'oryadminpwd';
+    CREATE USER oryadmin WITH ENCRYPTED PASSWORD 'oryadminpwd';
+    GRANT ALL PRIVILEGES ON DATABASE ory TO oryadmin;
 ---
 apiVersion: apps/v1
 kind: Deployment

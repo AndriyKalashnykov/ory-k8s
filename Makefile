@@ -28,7 +28,7 @@ version:
 
 #y-deploy: @ Deploy Yugabyte
 y-deploy:
-	kubectl apply -f ./yugabytedb
+	kubectl apply -f ./yugabytedb -n ory-poc
 	kubectl wait pods -n ory-poc -l app=yugabytedb --for condition=Ready --timeout=180s
 	echo "waiting for yugabytedb service to get External-IP"
 	@until kubectl get service/yugabytedb -n ory-poc --output=jsonpath='{.status.loadBalancer}' | grep "ingress"; do : ; done
@@ -36,8 +36,19 @@ y-deploy:
 
 #y-undeploy: @ UnDeploy Yugabyte
 y-uneploy:
-	kubectl delete -f ./yugabytedb
+	kubectl delete -f ./yugabytedb -n ory-poc --ignore-not-found=true
 
+
+#p-deploy: @ Deploy PostgreSQL
+p-deploy:
+	kubectl apply -f ./postgresql -n ory-poc
+	kubectl wait pods -n ory-poc -l app=postgres --for condition=Ready --timeout=180s
+	echo "waiting for postgres service to get External-IP"
+	@until kubectl get service/postgres -n ory-poc --output=jsonpath='{.status.loadBalancer}' | grep "ingress"; do : ; done
+
+#p-undeploy: @ UnDeploy PostgreSQL
+p-uneploy:
+	kubectl delete -f ./postgresql -n ory-poc --ignore-not-found=true
 
 #k-deploy: @ Deploy Kratos
 k-deploy:
@@ -51,16 +62,14 @@ k-deploy:
 
 #k-undeploy: @ UnDeploy Kratos
 k-undeploy:
-	kubectl delete -f ./kratos/deployment.yml -n ory-poc
-	kubectl delete ingress ory-kratos
-	kubectl delete -f ./kratos/service.yml -n ory-poc
-	kubectl delete -f ./kratos/migration-job.yml -n ory-poc
-	kubectl delete -f ./kratos/env.yml -n ory-poc
-	kubectl delete -f ./kratos/config.yml -n ory-poc
-	kubectl delete -f ./kratos/identity-schema.yml -n ory-poc
+	kubectl delete -f ./kratos/deployment.yml -n ory-poc --ignore-not-found=true
+	kubectl delete ingress ory-kratos --ignore-not-found=true 
+	kubectl delete -f ./kratos/service.yml -n ory-poc --ignore-not-found=true
+	kubectl delete -f ./kratos/env.yml -n ory-poc --ignore-not-found=true
+	kubectl delete -f ./kratos/config.yml -n ory-poc --ignore-not-found=true
+	kubectl delete -f ./kratos/identity-schema.yml -n ory-poc --ignore-not-found=true
 	
 	
-	
-	
-
-	
+#clean-all: @ UnDeploy all
+clean-all: y-uneploy p-uneploy k-undeploy
+	@echo "Done."
