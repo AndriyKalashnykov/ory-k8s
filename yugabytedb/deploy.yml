@@ -8,7 +8,6 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: yugabytedb-config
-  namespace: ory-poc
   labels:
     app: yugabytedb
 data:
@@ -20,7 +19,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: yugabytedb
-  namespace: ory-poc
   labels:
     app: yugabytedb
 spec:
@@ -54,7 +52,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: yugabytedb
-  namespace: ory-poc
 spec:
   replicas: 1
   selector:
