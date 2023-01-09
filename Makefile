@@ -52,22 +52,22 @@ p-uneploy:
 
 #k-deploy: @ Deploy Kratos
 k-deploy:
-	kubectl apply -f ./kratos/identity-schema.yml -n ory-poc
-	kubectl apply -f ./kratos/config.yml -n ory-poc
-	kubectl apply -f ./kratos/env.yml -n ory-poc
-	kubectl apply -f ./kratos/migration-job.yml -n ory-poc
-	kubectl apply -f ./kratos/service.yml -n ory-poc
+	kubectl apply -f ./kratos/v1/identity-schema.yml -n ory-poc
+	kubectl apply -f ./kratos/v1/config.yml -n ory-poc
+	kubectl apply -f ./kratos/v1/env.yml -n ory-poc
+	kubectl apply -f ./kratos/v1/migration-job.yml -n ory-poc
+	kubectl apply -f ./kratos/v1/service.yml -n ory-poc
 	kubectl create ingress ory-kratos --class=nginx --rule="app.example.com/*=kratos-service:443"
-	kubectl apply -f ./kratos/deployment.yml -n ory-poc
+	kubectl apply -f ./kratos/v1/deployment.yml -n ory-poc
 
 #k-undeploy: @ UnDeploy Kratos
 k-undeploy:
-	kubectl delete -f ./kratos/deployment.yml -n ory-poc --ignore-not-found=true
+	kubectl delete -f ./kratos/v1/deployment.yml -n ory-poc --ignore-not-found=true
 	kubectl delete ingress ory-kratos --ignore-not-found=true 
-	kubectl delete -f ./kratos/service.yml -n ory-poc --ignore-not-found=true
-	kubectl delete -f ./kratos/env.yml -n ory-poc --ignore-not-found=true
-	kubectl delete -f ./kratos/config.yml -n ory-poc --ignore-not-found=true
-	kubectl delete -f ./kratos/identity-schema.yml -n ory-poc --ignore-not-found=true
+	kubectl delete -f ./kratos/v1/service.yml -n ory-poc --ignore-not-found=true
+	kubectl delete -f ./kratos/v1/env.yml -n ory-poc --ignore-not-found=true
+	kubectl delete -f ./kratos/v1/config.yml -n ory-poc --ignore-not-found=true
+	kubectl delete -f ./kratos/v1/identity-schema.yml -n ory-poc --ignore-not-found=true
 	
 	
 #clean-all: @ UnDeploy all
