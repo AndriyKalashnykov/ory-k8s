@@ -1,0 +1,157 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: demo-oathkeeper
+  labels:
+    app.kubernetes.io/name: oathkeeper
+    helm.sh/chart: oathkeeper-0.26.5
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/version: "v0.39.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: oathkeeper/templates/configmap-config-demo.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-oathkeeper-config-demo
+  namespace: ory-poc
+  labels:
+    app.kubernetes.io/name: oathkeeper
+    helm.sh/chart: oathkeeper-0.26.5
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/version: "v0.39.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  "config.yaml": |
+    access_rules:
+      repositories:
+      - "https://raw.githubusercontent.com/ory/k8s/master/helm/charts/oathkeeper/demo/access-rules.json"
+    authenticators:
+      anonymous:
+        enabled: true
+      jwt:
+        enabled: true
+        config:
+          jwks_urls:
+            - "https://raw.githubusercontent.com/ory/k8s/master/helm/charts/oathkeeper/demo/authenticator.jwt.jwks.json"
+      noop:
+        enabled: true
+      unauthorized:
+        enabled: true
+    authorizers:
+      allow:
+        enabled: true
+      deny:
+        enabled: true
+    mutators:
+      cookie:
+        enabled: true
+        config:
+          cookies:
+            user: "<nil>"
+      header:
+        enabled: true
+        config:
+          headers:
+            X-User: "<nil>"
+      id_token:
+        enabled: true
+        config:
+          issuer_url: http://demo-oathkeeper/
+          jwks_url: https://raw.githubusercontent.com/ory/k8s/master/helm/charts/oathkeeper/demo/mutator.id_token.jwks.json
+      noop:
+        enabled: true
+    serve:
+      proxy:
+        cors:
+          enabled: true
+      api:
+        cors:
+          enabled: true
+---
+# Source: oathkeeper/templates/configmap-rules.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-oathkeeper-rules
+  namespace: ory-poc
+  labels:
+    app.kubernetes.io/name: oathkeeper
+    helm.sh/chart: oathkeeper-0.26.5
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/version: "v0.39.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  "access-rules.json": |-
+    []
+---
+# Source: oathkeeper/templates/service-metrics.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-oathkeeper-metrics
+  namespace: ory-poc
+  labels:
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/name: oathkeeper
+    helm.sh/chart: oathkeeper-0.26.5
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/version: "v0.39.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http-metrics
+      protocol: TCP
+      name: http 
+  selector:
+    app.kubernetes.io/name: oathkeeper
+    app.kubernetes.io/instance: demo
+---
+# Source: oathkeeper/templates/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: demo-oathkeeper
+  namespace: ory-poc
+  labels:
+    app.kubernetes.io/name: oathkeeper
+    helm.sh/chart: oathkeeper-0.26.5
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/version: "v0.39.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    helm.sh/hook: pre-install, pre-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation
+    helm.sh/hook-weight: "0"
+    helm.sh/resource-policy: keep
+type: Opaque
+data:
+---
+# Source: oathkeeper/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "demo-oathkeeper-test-connection"
+  namespace: ory-poc
+  labels:
+    app.kubernetes.io/name: oathkeeper
+    helm.sh/chart: oathkeeper-0.26.5
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/version: "v0.39.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  containers:
+    - name: liveness-probe
+      image: busybox
+      command: ['wget']
+      args:  ['http://demo-oathkeeper-api:4456/health/alive']
+    - name: readiness-probe
+      image: busybox
+      command: ['wget']
+      args:  ['http://demo-oathkeeper-api:4456/health/ready']
+  restartPolicy: Never
