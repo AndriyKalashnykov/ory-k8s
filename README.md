@@ -41,6 +41,28 @@ make y-deploy
 ```bash
 make udeploy
 
+## Ory
+
+http://k8s.ory.sh/helm/
+
+
+```bash
+helm repo add ory https://k8s.ory.sh/helm/charts
+helm repo update
+
+helm template --name-template=ory --namespace=ory-poc -f ./helm-template/kratos/values.yml \
+  ory/kratos > ./kratos/v2/deploy.yml
+
+helm template --name-template=demo --namespace=ory-poc \
+  --set 'demo=true' \
+  --set maester.enabled=false \
+  --set service.enabled=false \
+  --set service.api.enabled=false \
+  --set service.proxy.enabled=false \
+  --set global.ory.oathkeeper.maester.mode=this_prevents_rendering_the_deployment \
+  ory/oathkeeper > ./oathkeeper/deploy.yml
+```
+
 ## Kratos
 
 [tags](https://hub.docker.com/r/oryd/kratos/tags)
@@ -58,3 +80,12 @@ curl -v -s -k -X GET -H "Accept: application/json" https://api.example.com/krato
 ```bash
 make k-udeploy
 ```
+
+## Links
+
+http://k8s.ory.sh/helm/
+https://www.ory.sh/kratos-knative-demo/
+https://devpress.csdn.net/k8s/62ebfa4c19c509286f415f3f.html
+https://pumpingco.de/blog/develop-against-a-cloud-hosted-ory-kratos-instance-from-localhost/
+https://blog.getambassador.io/part-2-api-access-control-and-authentication-with-kubernetes-ambassador-and-ory-oathkeeper-q-a-127fa57f6332
+https://github.com/pngouin/k8s-ory-example
