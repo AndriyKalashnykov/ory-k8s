@@ -1,5 +1,9 @@
 # ory-k8s
 
+## Data Storage and Persistence
+
+https://www.ory.sh/docs/ecosystem/deployment
+
 ## YugabyteDB
 
 
