@@ -57,7 +57,7 @@ k-deploy:
 	kubectl apply -f ./kratos/env.yml -n ory-poc
 	kubectl apply -f ./kratos/migration-job.yml -n ory-poc
 	kubectl apply -f ./kratos/service.yml -n ory-poc
-	kubectl create ingress ory-kratos --class=nginx --rule="*.example.com/*=kratos-service:80"
+	kubectl create ingress ory-kratos --class=nginx --rule="app.example.com/*=kratos-service:443"
 	kubectl apply -f ./kratos/deployment.yml -n ory-poc
 
 #k-undeploy: @ UnDeploy Kratos

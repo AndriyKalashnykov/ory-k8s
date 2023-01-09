@@ -51,6 +51,8 @@ make udeploy
 make k-deploy
 curl -v -s -k -X GET -H "Accept: application/json" https://api.example.com/kratos/self-service/registration/browser
 
+curl -v -s -k -X GET -H "Accept: application/json" https://api.example.com/self-service/registration/browser
+
 ```
 
 ### UnDeploy 
