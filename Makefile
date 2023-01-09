@@ -28,7 +28,7 @@ version:
 
 #y-deploy: @ Deploy Yugabyte
 y-deploy:
-	kubectl apply -f ./yugabytedb -n ory-poc
+	kubectl apply -f ./v1/yugabytedb -n ory-poc
 	kubectl wait pods -n ory-poc -l app=yugabytedb --for condition=Ready --timeout=180s
 	echo "waiting for yugabytedb service to get External-IP"
 	@until kubectl get service/yugabytedb -n ory-poc --output=jsonpath='{.status.loadBalancer}' | grep "ingress"; do : ; done
@@ -36,7 +36,7 @@ y-deploy:
 
 #y-undeploy: @ UnDeploy Yugabyte
 y-uneploy:
-	kubectl delete -f ./yugabytedb -n ory-poc --ignore-not-found=true
+	kubectl delete -f ./v1/yugabytedb -n ory-poc --ignore-not-found=true
 
 
 #p-deploy: @ Deploy PostgreSQL
