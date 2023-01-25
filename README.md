@@ -49,7 +49,7 @@ make p-deploy
 make p-udeploy
 ```
 
-## YugabyteDB (Experimenta, dosent work, column type incompatibility)
+## YugabyteDB (Experimental, doesn't work, column type incompatibility)
 
 ```ini
 postgresql://yugabyte:yugabyte@yugabytedb:5433/ory?sslmode=disable&max_conns=20&max_idle_conns=4
