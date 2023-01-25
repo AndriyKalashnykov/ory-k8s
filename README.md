@@ -1,61 +1,80 @@
 # ory-k8s
 
+## Create namespace
+
+```bash
+kubectl create ns threeport-api
+```
+
 ## Data Storage and Persistence
 
 https://www.ory.sh/docs/ecosystem/deployment
 
-## YugabyteDB
+Choose and deploy Data Storage and Persistense provider (PostgreSQL, MySQL, SQLite and CockroachDB)
 
+## [CockroachDB](https://www.ory.sh/docs/ecosystem/deployment#cockroachdb)
 
-[tags](https://hub.docker.com/r/yugabytedb/yugabyte/tags)
-
-postgresql://yugabyte:yugabyte@yugabytedb:5433/ory?sslmode=disable&max_conns=20&max_idle_conns=4
-cG9zdGdyZXNxbDovL3l1Z2FieXRlOnl1Z2FieXRlQHl1Z2FieXRlZGI6NTQzMy9vcnk/c3NsbW9kZT1kaXNhYmxlJm1heF9jb25ucz0yMCZtYXhfaWRsZV9jb25ucz00
-
-### Deploy 
-
+Modify `dsn` value in [kratos-cockroachdb.yml](./k8s/kratos/cockroachdb/kratos-cockroachdb.yml#L424) with the output of 
+following
 ```bash
-make y-deploy
-
+echo -n 'cockroach://tp_rest_api:tp-rest-api-pwd@crdb-public.threeport-api.svc.cluster.local:26257/threeport_api?sslmode=disable' | base64
+```
+for example above it's:
+```text
+Y29ja3JvYWNoOi8vdHBfcmVzdF9hcGk6dHAtcmVzdC1hcGktcHdkQGNyZGItcHVibGljLnRocmVlcG9ydC1hcGkuc3ZjLmNsdXN0ZXIubG9jYWw6MjYyNTcvdGhyZWVwb3J0X2FwaT9zc2xtb2RlPWRpc2FibGU=
 ```
 
-### UnDeploy 
+### Deploy
 
 ```bash
-make udeploy
+kubectl apply -f ./k8s/kratos/cockroachdb/cockroachdb.yml
+echo "waiting for cockroachdb to get ready"
+kubectl wait pod -n threeport-api crdb-0 --for condition=Ready --timeout=180s
 ```
 
-## PostgreSQL
-
-
-[tags](https://hub.docker.com/r/yugabytedb/yugabyte/tags)
+## [PostgreSQL](https://www.ory.sh/docs/ecosystem/deployment#postgresql)
 
 postgresql://oryadmin:oryadminpwd@postgres:5432/ory?sslmode=disable&max_conns=20&max_idle_conns=4
 cG9zdGdyZXNxbDovL29yeWFkbWluOm9yeWFkbWlucHdkQHBvc3RncmVzOjU0MzIvb3J5P3NzbG1vZGU9ZGlzYWJsZSZtYXhfY29ubnM9MjAmbWF4X2lkbGVfY29ubnM9NA==
 
+### Deploy
+
+```bash
+make p-deploy
+
+```
+### UnDeploy
+
+```bash
+make p-udeploy
+```
+
+## YugabyteDB (Experimenta, dosent work, column type incompatibility)
+
+```ini
+postgresql://yugabyte:yugabyte@yugabytedb:5433/ory?sslmode=disable&max_conns=20&max_idle_conns=4
+cG9zdGdyZXNxbDovL3l1Z2FieXRlOnl1Z2FieXRlQHl1Z2FieXRlZGI6NTQzMy9vcnk/c3NsbW9kZT1kaXNhYmxlJm1heF9jb25ucz0yMCZtYXhfaWRsZV9jb25ucz00
+```
+
 ### Deploy 
 
 ```bash
 make y-deploy
-
 ```
 
 ### UnDeploy 
 
 ```bash
 make udeploy
+```
 
 ## Ory
 
 http://k8s.ory.sh/helm/
 
-
 ```bash
 helm repo add ory https://k8s.ory.sh/helm/charts
 helm repo update
-
-helm template --name-template=ory --namespace=ory-poc -f ./helm-template/kratos/values.yml \
-  ory/kratos > ./kratos/v2/deploy.yml
 
 helm template --name-template=demo --namespace=ory-poc \
   --set 'demo=true' \
@@ -73,18 +92,30 @@ helm template --name-template=demo --namespace=ory-poc \
 
 ### Deploy 
 
+Create k8s templates for Kratos if you need to override existing ones 
+
 ```bash
-make k-deploy
-curl -v -s -k -X GET -H "Accept: application/json" https://api.example.com/kratos/self-service/registration/browser
-
-curl -v -s -k -X GET -H "Accept: application/json" https://api.example.com/self-service/registration/browser
-
+helm template --name-template=ory --namespace=threeport-api -f ./helm-template/kratos/values.yml ory/kratos > ./k8s/kratos/kratos-cockroachdb.yml
 ```
 
-### UnDeploy 
-
+Deploy Kratos
 ```bash
-make k-udeploy
+kubectl apply -f ./k8s/kratos/cockroachdb/kratos-cockroachdb.yml
+kubectl describe deployments.apps -n threeport-api ory-kratos
+
+kubectl apply -f ./k8s/kratos/cockroachdb/crdb-test-pod.yml
+kubectl logs -n threeport-api crdb-test
+kubectl delete -f ./k8s/kratos/cockroachdb/crdb-test-pod.yml
+
+curl -v -s -k -X GET -H "Accept: application/json" https://api.example.com/kratos/self-service/registration/browser
+curl -v -s -k -X GET -H "Accept: application/json" https://api.example.com/self-service/registration/browser
+```
+
+UnDeploy
+```bash
+kubectl delete -f ./k8s/kratos/cockroachdb/kratos-cockroachdb.yml
+
+kubectl delete -f ./k8s/kratos/cockroachdb/cockroachdb.yml
 ```
 
 ## Links

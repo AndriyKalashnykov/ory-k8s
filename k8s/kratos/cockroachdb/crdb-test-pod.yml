@@ -1,0 +1,52 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-create
+  namespace: "threeport-api"
+data:
+  db.sql: |+
+    CREATE USER IF NOT EXISTS tp_rest_api
+      LOGIN
+    ;
+    CREATE DATABASE IF NOT EXISTS threeport_api
+        encoding='utf-8'
+    ;
+    GRANT ALL ON DATABASE threeport_api TO tp_rest_api;
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: crdb-test
+  namespace: "threeport-api"
+spec:
+  restartPolicy: Never
+  initContainers:
+  - name: db-init
+    image: cockroachdb/cockroach:v22.2.3
+    imagePullPolicy: "IfNotPresent"
+    command:
+      - "bash"
+      - "-c"
+      - "cockroach sql --insecure --host crdb-public.threeport-api.svc.cluster.local --port 26257 -f /etc/threeport/db-create/db.sql"
+    volumeMounts:
+      - name: db-create
+        mountPath: "/etc/threeport/db-create"
+  containers:
+    - name: client-test
+      image: cockroachdb/cockroach:v22.2.3
+      imagePullPolicy: "IfNotPresent"
+      command:
+        - /cockroach/cockroach
+        - sql
+        - --insecure
+        - --host
+        - crdb-public.threeport-api.svc.cluster.local
+        - --port
+        - "26257"
+        - -e
+        - SHOW DATABASES;
+  volumes:
+    - name: db-create
+      configMap:
+        name: db-create
