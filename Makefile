@@ -26,49 +26,66 @@ release: build clean
 version:
 	@echo $(shell git describe --tags --abbrev=0)
 
-#y-deploy: @ Deploy Yugabyte
-y-deploy:
-	kubectl apply -f ./v1/yugabytedb -n ory-poc
-	kubectl wait pods -n ory-poc -l app=yugabytedb --for condition=Ready --timeout=180s
-	echo "waiting for yugabytedb service to get External-IP"
-	@until kubectl get service/yugabytedb -n ory-poc --output=jsonpath='{.status.loadBalancer}' | grep "ingress"; do : ; done
-	@echo xdg-open http://$(shell kubectl get svc/yugabytedb -n ory-poc -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'):7000
-
-#y-undeploy: @ UnDeploy Yugabyte
-y-uneploy:
-	kubectl delete -f ./v1/yugabytedb -n ory-poc --ignore-not-found=true
-
-
 #p-deploy: @ Deploy PostgreSQL
 p-deploy:
-	kubectl apply -f ./postgresql -n ory-poc
-	kubectl wait pods -n ory-poc -l app=postgres --for condition=Ready --timeout=180s
+	kubectl apply -f ./k8s/db/postgresql -n threeport-api
+	kubectl wait pods -n threeport-api -l app=postgres --for condition=Ready --timeout=180s
 	echo "waiting for postgres service to get External-IP"
-	@until kubectl get service/postgres -n ory-poc --output=jsonpath='{.status.loadBalancer}' | grep "ingress"; do : ; done
+	@until kubectl get service/postgres -n threeport-api --output=jsonpath='{.status.loadBalancer}' | grep "ingress"; do : ; done
 
 #p-undeploy: @ UnDeploy PostgreSQL
-p-uneploy:
-	kubectl delete -f ./postgresql -n ory-poc --ignore-not-found=true
+p-undeploy:
+	kubectl delete -f ./k8s/db/postgresql -n threeport-api --ignore-not-found=true
+
+#c-deploy: @ Deploy CockroachDB
+c-deploy:
+	kubectl apply -f ./k8s/db/cockroachdb -n threeport-api
+	kubectl wait pods -n threeport-api -l app=postgres --for condition=Ready --timeout=180s
+	@echo "waiting for CockroachDB service to get External-IP"
+	@until kubectl get service/crdb-public -n threeport-api --output=jsonpath='{.status.loadBalancer}' | grep "ingress"; do : ; done
+	@echo "Create CockroachDB for Kratos"
+	kubectl apply -f ./k8s/db/cockroachdb/crdb-test-pod.yml -n threeport-api
+	kubectl logs -n threeport-api crdb-test
+
+#c-undeploy: @ UnDeploy CockroachDB
+c-undeploy:
+	kubectl delete -f ./k8s/db/cockroachdb -n threeport-api --ignore-not-found=true
+
+#y-deploy: @ Deploy Yugabyte
+y-deploy:
+	kubectl apply -f ./k8s/db/v1/yugabytedb -n threeport-api
+	kubectl wait pods -n threeport-api -l app=yugabytedb --for condition=Ready --timeout=180s
+	echo "waiting for yugabytedb service to get External-IP"
+	@until kubectl get service/yugabytedb -n threeport-api --output=jsonpath='{.status.loadBalancer}' | grep "ingress"; do : ; done
+	@echo xdg-open http://$(shell kubectl get svc/yugabytedb -n threeport-api -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'):7000
+
+#y-undeploy: @ UnDeploy Yugabyte
+y-undeploy:
+	kubectl delete -f ./k8s/db/v1/yugabytedb -n threeport-api --ignore-not-found=true
 
 #k-deploy: @ Deploy Kratos
 k-deploy:
-	kubectl apply -f ./kratos/v1/identity-schema.yml -n ory-poc
-	kubectl apply -f ./kratos/v1/config.yml -n ory-poc
-	kubectl apply -f ./kratos/v1/env.yml -n ory-poc
-	kubectl apply -f ./kratos/v1/migration-job.yml -n ory-poc
-	kubectl apply -f ./kratos/v1/service.yml -n ory-poc
+	kubectl apply -f ./k8s/kratos/v1/identity-schema.yml -n threeport-api
+	kubectl apply -f ./k8s/kratos/v1/config.yml -n threeport-api
+	kubectl apply -f ./k8s/kratos/v1/env.yml -n threeport-api
+	kubectl apply -f ./k8s/kratos/v1/migration-job.yml -n threeport-api
+	kubectl apply -f ./k8s/kratos/v1/service.yml -n threeport-api
 	kubectl create ingress ory-kratos --class=nginx --rule="app.example.com/*=kratos-service:443"
-	kubectl apply -f ./kratos/v1/deployment.yml -n ory-poc
+	kubectl apply -f ./k8s/kratos/v1/deployment.yml -n threeport-api
+#	kubectl apply -f ./k8s/kratos/v2/kratos-deploy.yml
+#	kubectl describe deployments.apps -n threeport-api ory-kratos
+#	kubectl describe deployments.apps -n threeport-api ory-kratos
 
 #k-undeploy: @ UnDeploy Kratos
 k-undeploy:
-	kubectl delete -f ./kratos/v1/deployment.yml -n ory-poc --ignore-not-found=true
-	kubectl delete ingress ory-kratos --ignore-not-found=true 
-	kubectl delete -f ./kratos/v1/service.yml -n ory-poc --ignore-not-found=true
-	kubectl delete -f ./kratos/v1/env.yml -n ory-poc --ignore-not-found=true
-	kubectl delete -f ./kratos/v1/config.yml -n ory-poc --ignore-not-found=true
-	kubectl delete -f ./kratos/v1/identity-schema.yml -n ory-poc --ignore-not-found=true
-	
+	kubectl delete -f ./k8s/kratos/v1/migration-job.yml -n threeport-api --ignore-not-found=true
+	kubectl delete -f ./k8s/kratos/v1/deployment.yml -n threeport-api --ignore-not-found=true
+	kubectl delete ingress ory-kratos --ignore-not-found=true
+	kubectl delete -f ./k8s/kratos/v1/service.yml -n threeport-api --ignore-not-found=true
+	kubectl delete -f ./k8s/kratos/v1/env.yml -n threeport-api --ignore-not-found=true
+	kubectl delete -f ./k8s/kratos/v1/config.yml -n threeport-api --ignore-not-found=true
+	kubectl delete -f ./k8s/kratos/v1/identity-schema.yml -n threeport-api --ignore-not-found=true
+#	kubectl delete -f ./k8s/kratos/v2/kratos-deploy.yml
 	
 #clean-all: @ UnDeploy all
 clean-all: y-uneploy p-uneploy k-undeploy

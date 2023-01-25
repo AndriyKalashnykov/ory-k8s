@@ -14,7 +14,7 @@ Choose and deploy Data Storage and Persistense provider (PostgreSQL, MySQL, SQLi
 
 ## [CockroachDB](https://www.ory.sh/docs/ecosystem/deployment#cockroachdb)
 
-Modify `dsn` value in [kratos-cockroachdb.yml](./k8s/kratos/cockroachdb/kratos-cockroachdb.yml#L424) with the output of 
+Modify `dsn` value in [env.yml](./k8s/kratos/v1/env.yml#8) with the output of 
 following
 ```bash
 echo -n 'cockroach://tp_rest_api:tp-rest-api-pwd@crdb-public.threeport-api.svc.cluster.local:26257/threeport_api?sslmode=disable' | base64
@@ -34,8 +34,15 @@ kubectl wait pod -n threeport-api crdb-0 --for condition=Ready --timeout=180s
 
 ## [PostgreSQL](https://www.ory.sh/docs/ecosystem/deployment#postgresql)
 
-postgresql://oryadmin:oryadminpwd@postgres:5432/ory?sslmode=disable&max_conns=20&max_idle_conns=4
-cG9zdGdyZXNxbDovL29yeWFkbWluOm9yeWFkbWlucHdkQHBvc3RncmVzOjU0MzIvb3J5P3NzbG1vZGU9ZGlzYWJsZSZtYXhfY29ubnM9MjAmbWF4X2lkbGVfY29ubnM9NA==
+Modify `dsn` value in [env.yml](./k8s/kratos/v1/env.yml#8) with the output of
+following
+```bash
+echo -n 'postgresql://tp_rest_api:tp-rest-api-pwd@postgres:5432/threeport_api?sslmode=disable&max_conns=20&max_idle_conns=4' | base64
+```
+for example above it's:
+```text
+cG9zdGdyZXNxbDovL3RwX3Jlc3RfYXBpOnRwLXJlc3QtYXBpLXB3ZEBwb3N0Z3Jlczo1NDMyL3RocmVlcG9ydF9hcGk/c3NsbW9kZT1kaXNhYmxlJm1heF9jb25ucz0yMCZtYXhfaWRsZV9jb25ucz00
+```
 
 ### Deploy
 
@@ -51,8 +58,13 @@ make p-udeploy
 
 ## YugabyteDB (Experimental, doesn't work, column type incompatibility)
 
-```ini
-postgresql://yugabyte:yugabyte@yugabytedb:5433/ory?sslmode=disable&max_conns=20&max_idle_conns=4
+Modify `dsn` value in [env.yml](./k8s/kratos/v1/env.yml#8) with the output of
+following
+```bash
+echo -n 'postgresql://yugabyte:yugabyte@yugabytedb:5433/ory?sslmode=disable&max_conns=20&max_idle_conns=4' | base64
+```
+for example above it's:
+```text
 cG9zdGdyZXNxbDovL3l1Z2FieXRlOnl1Z2FieXRlQHl1Z2FieXRlZGI6NTQzMy9vcnk/c3NsbW9kZT1kaXNhYmxlJm1heF9jb25ucz0yMCZtYXhfaWRsZV9jb25ucz00
 ```
 
@@ -65,57 +77,46 @@ make y-deploy
 ### UnDeploy 
 
 ```bash
-make udeploy
-```
-
-## Ory
-
-http://k8s.ory.sh/helm/
-
-```bash
-helm repo add ory https://k8s.ory.sh/helm/charts
-helm repo update
-
-helm template --name-template=demo --namespace=ory-poc \
-  --set 'demo=true' \
-  --set maester.enabled=false \
-  --set service.enabled=false \
-  --set service.api.enabled=false \
-  --set service.proxy.enabled=false \
-  --set global.ory.oathkeeper.maester.mode=this_prevents_rendering_the_deployment \
-  ory/oathkeeper > ./oathkeeper/deploy.yml
+make y-undeploy
 ```
 
 ## Kratos
 
 [Kratos tags](https://hub.docker.com/r/oryd/kratos/tags)
 
-### Deploy 
 
-Create k8s templates for Kratos if you need to override existing ones 
-
+Create k8s templates for Kratos if you need to override existing ones
 ```bash
-helm template --name-template=ory --namespace=threeport-api -f ./helm-template/kratos/values.yml ory/kratos > ./k8s/kratos/kratos-cockroachdb.yml
+# http://k8s.ory.sh/helm/
+helm repo add ory https://k8s.ory.sh/helm/charts
+helm repo update
+helm template --name-template=ory --namespace=threeport-api -f ./helm-template/kratos/values.yml ory/kratos > ./k8s/kratos/kratos-deploy.yml
 ```
 
 Deploy Kratos
 ```bash
-kubectl apply -f ./k8s/kratos/cockroachdb/kratos-cockroachdb.yml
-kubectl describe deployments.apps -n threeport-api ory-kratos
-
-kubectl apply -f ./k8s/kratos/cockroachdb/crdb-test-pod.yml
-kubectl logs -n threeport-api crdb-test
-kubectl delete -f ./k8s/kratos/cockroachdb/crdb-test-pod.yml
+make k-deploy
 
 curl -v -s -k -X GET -H "Accept: application/json" https://api.example.com/kratos/self-service/registration/browser
 curl -v -s -k -X GET -H "Accept: application/json" https://api.example.com/self-service/registration/browser
 ```
 
-UnDeploy
+UnDeploy Kratos
 ```bash
-kubectl delete -f ./k8s/kratos/cockroachdb/kratos-cockroachdb.yml
+make k-undeploy
+```
 
-kubectl delete -f ./k8s/kratos/cockroachdb/cockroachdb.yml
+## Oathkeeper
+
+```bash
+helm template --name-template=demo --namespace=ory-poc \
+--set 'demo=true' \
+--set maester.enabled=false \
+--set service.enabled=false \
+--set service.api.enabled=false \
+--set service.proxy.enabled=false \
+--set global.ory.oathkeeper.maester.mode=this_prevents_rendering_the_deployment \
+ory/oathkeeper > ./oathkeeper/deploy.yml
 ```
 
 ## Resources
