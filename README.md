@@ -88,7 +88,7 @@ helm template --name-template=demo --namespace=ory-poc \
 
 ## Kratos
 
-[tags](https://hub.docker.com/r/oryd/kratos/tags)
+[Kratos tags](https://hub.docker.com/r/oryd/kratos/tags)
 
 ### Deploy 
 
@@ -118,11 +118,11 @@ kubectl delete -f ./k8s/kratos/cockroachdb/kratos-cockroachdb.yml
 kubectl delete -f ./k8s/kratos/cockroachdb/cockroachdb.yml
 ```
 
-## Links
+## Resources
 
-http://k8s.ory.sh/helm/
-https://www.ory.sh/kratos-knative-demo/
-https://devpress.csdn.net/k8s/62ebfa4c19c509286f415f3f.html
-https://pumpingco.de/blog/develop-against-a-cloud-hosted-ory-kratos-instance-from-localhost/
-https://blog.getambassador.io/part-2-api-access-control-and-authentication-with-kubernetes-ambassador-and-ory-oathkeeper-q-a-127fa57f6332
-https://github.com/pngouin/k8s-ory-example
+- http://k8s.ory.sh/helm/
+- https://www.ory.sh/kratos-knative-demo/
+- https://devpress.csdn.net/k8s/62ebfa4c19c509286f415f3f.html
+- https://pumpingco.de/blog/develop-against-a-cloud-hosted-ory-kratos-instance-from-localhost/
+- https://blog.getambassador.io/part-2-api-access-control-and-authentication-with-kubernetes-ambassador-and-ory-oathkeeper-q-a-127fa57f6332
+- https://github.com/pngouin/k8s-ory-example
